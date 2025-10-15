@@ -61,7 +61,7 @@ func (d *db) Update(ctx context.Context, user user.User) error {
 
 	userBytes, err := bson.Marshal(user)
 	if err != nil {
-		fmt.Errorf("failed to marshal user due to: %v", err)
+		return fmt.Errorf("failed to marshal user due to: %v", err)
 	}
 
 	var updateUserObj bson.M
@@ -89,7 +89,25 @@ func (d *db) Update(ctx context.Context, user user.User) error {
 }
 
 func (d *db) Delete(ctx context.Context, id string) error {
-	panic("implement me")
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("failed to convert user ID to ObjectID. ObjectID: %s", id)
+	}
+
+	filter := bson.M{"_id": oid}
+
+	result, err := d.collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("failed to delete user ID: %s due to: %v", id, err)
+	}
+
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("not found")
+	}
+
+	d.logger.Tracef("deleted %d documents", result.DeletedCount)
+
+	return nil
 }
 
 func NewStorage(database *mongo.Database, collection string, logger *logging.Logger) user.Storage {
