@@ -1,9 +1,11 @@
 package db
 
 import (
+	"REST_API_app/internal/apperror"
 	"REST_API_app/internal/user"
 	"REST_API_app/pkg/logging"
 	"context"
+	"errors"
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -42,7 +44,10 @@ func (d *db) FindOne(ctx context.Context, id string) (u user.User, err error) {
 
 	result := d.collection.FindOne(ctx, filter)
 	if result.Err() != nil {
-		return u, fmt.Errorf("failed to find user by ObjectID: %s due to error: %v", id, err)
+		if errors.Is(result.Err(), mongo.ErrNoDocuments) {
+			return u, apperror.ErrNotFound
+		}
+		return u, fmt.Errorf("failed to find user by ID: %s due to error: %v", id, err)
 	}
 	if err := result.Decode(&u); err != nil {
 		return u, fmt.Errorf("failed to decode user ID: %s from DB due to error: %v", id, err)
@@ -94,7 +99,7 @@ func (d *db) Update(ctx context.Context, user user.User) error {
 	}
 
 	if result.MatchedCount == 0 {
-		return fmt.Errorf("not found")
+		return apperror.ErrNotFound
 	}
 
 	d.logger.Tracef("matched %d documents and modified %d documents", result.MatchedCount, result.ModifiedCount)
@@ -116,7 +121,7 @@ func (d *db) Delete(ctx context.Context, id string) error {
 	}
 
 	if result.DeletedCount == 0 {
-		return fmt.Errorf("not found")
+		return apperror.ErrNotFound
 	}
 
 	d.logger.Tracef("deleted %d documents", result.DeletedCount)

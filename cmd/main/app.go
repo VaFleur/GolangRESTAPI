@@ -3,10 +3,7 @@ package main
 import (
 	"REST_API_app/internal/config"
 	"REST_API_app/internal/user"
-	"REST_API_app/internal/user/db"
-	"REST_API_app/pkg/client/mongodb"
 	"REST_API_app/pkg/logging"
-	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -26,13 +23,13 @@ func main() {
 
 	cfg := config.GetConfig()
 
-	cfgMongo := cfg.MongoDB
-	mongoDBClient, err := mongodb.NewClient(context.Background(), cfgMongo.Host, cfgMongo.Port, cfgMongo.Username,
-		cfgMongo.Password, cfgMongo.Database, cfgMongo.AuthDB)
-	if err != nil {
-		panic(err)
-	}
-	storage := db.NewStorage(mongoDBClient, cfgMongo.Collection, logger)
+	//cfgMongo := cfg.MongoDB
+	//mongoDBClient, err := mongodb.NewClient(context.Background(), cfgMongo.Host, cfgMongo.Port, cfgMongo.Username,
+	//	cfgMongo.Password, cfgMongo.Database, cfgMongo.AuthDB)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//storage := db.NewStorage(mongoDBClient, cfgMongo.Collection, logger)
 
 	logger.Info("register user handler")
 	handler := user.NewHandler(logger)
